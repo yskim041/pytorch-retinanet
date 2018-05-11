@@ -22,7 +22,8 @@ from torch.autograd import Variable
 def run_train():
     parser = argparse.ArgumentParser(description='PyTorch RetinaNet Training')
     parser.add_argument('--lr', default=1e-3, type=float, help='learning rate')
-    parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
+    parser.add_argument('--resume', '-r', action='store_true',
+                        help='resume from checkpoint')
     args = parser.parse_args()
 
     assert torch.cuda.is_available(), 'Error: CUDA not found!'
@@ -33,16 +34,24 @@ def run_train():
     print('==> Preparing data..')
     transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize((0.485,0.456,0.406), (0.229,0.224,0.225))
+        transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
     ])
 
-    trainset = ListDataset(root='./data/VOC2012/JPEGImages',
-                           list_file='./data/voc12_train.txt', train=True, transform=transform, input_size=600)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=4, shuffle=True, num_workers=8, collate_fn=trainset.collate_fn)
+    trainset = ListDataset(
+        root='./data/VOC2012/JPEGImages',
+        list_file='./data/voc12_train.txt',
+        train=True, transform=transform, input_size=600)
+    trainloader = torch.utils.data.DataLoader(
+        trainset, batch_size=4, shuffle=True, num_workers=8,
+        collate_fn=trainset.collate_fn)
 
-    testset = ListDataset(root='./data/VOC2012/JPEGImages',
-                          list_file='./data/voc12_val.txt', train=False, transform=transform, input_size=600)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=4, shuffle=False, num_workers=8, collate_fn=testset.collate_fn)
+    testset = ListDataset(
+        root='./data/VOC2012/JPEGImages',
+        list_file='./data/voc12_val.txt',
+        train=False, transform=transform, input_size=600)
+    testloader = torch.utils.data.DataLoader(
+        testset, batch_size=4, shuffle=False, num_workers=8,
+        collate_fn=testset.collate_fn)
 
     # Model
     net = RetinaNet()
@@ -54,11 +63,13 @@ def run_train():
         best_loss = checkpoint['loss']
         start_epoch = checkpoint['epoch']
 
-    net = torch.nn.DataParallel(net, device_ids=range(torch.cuda.device_count()))
+    net = torch.nn.DataParallel(
+        net, device_ids=range(torch.cuda.device_count()))
     net.cuda()
 
     criterion = FocalLoss()
-    optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=1e-4)
+    optimizer = optim.SGD(net.parameters(), lr=args.lr,
+                          momentum=0.9, weight_decay=1e-4)
 
     # Training
     def train(epoch):
@@ -78,7 +89,8 @@ def run_train():
             optimizer.step()
 
             train_loss += loss.data[0]
-            print('train_loss: %.3f | avg_loss: %.3f' % (loss.data[0], train_loss/(batch_idx+1)))
+            print('train_loss: %.3f | avg_loss: %.3f' %
+                  (loss.data[0], train_loss / (batch_idx + 1)))
 
     # Test
     def test(epoch):
@@ -93,7 +105,8 @@ def run_train():
             loc_preds, cls_preds = net(inputs)
             loss = criterion(loc_preds, loc_targets, cls_preds, cls_targets)
             test_loss += loss.data[0]
-            print('test_loss: %.3f | avg_loss: %.3f' % (loss.data[0], test_loss/(batch_idx+1)))
+            print('test_loss: %.3f | avg_loss: %.3f' %
+                  (loss.data[0], test_loss / (batch_idx + 1)))
 
         # Save checkpoint
         global best_loss
@@ -110,8 +123,7 @@ def run_train():
             torch.save(state, './checkpoint/ckpt.pth')
             best_loss = test_loss
 
-
-    for epoch in range(start_epoch, start_epoch+200):
+    for epoch in range(start_epoch, start_epoch + 200):
         train(epoch)
         test(epoch)
 

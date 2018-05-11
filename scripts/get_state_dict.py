@@ -66,7 +66,7 @@ def get_state_dict():
             m.bias.data.zero_()
 
     pi = 0.01
-    nn.init.constant_(net.cls_head[-1].bias, -math.log((1-pi)/pi))
+    nn.init.constant_(net.cls_head[-1].bias, -math.log((1 - pi) / pi))
 
     net.fpn.load_state_dict(dd)
     torch.save(net.state_dict(), net_filename)

@@ -51,12 +51,13 @@ class ListDataset(data.Dataset):
             box = []
             label = []
             for i in range(num_boxes):
-                xmin = splited[1+5*i]
-                ymin = splited[2+5*i]
-                xmax = splited[3+5*i]
-                ymax = splited[4+5*i]
-                c = splited[5+5*i]
-                box.append([float(xmin),float(ymin),float(xmax),float(ymax)])
+                xmin = splited[1 + 5 * i]
+                ymin = splited[2 + 5 * i]
+                xmax = splited[3 + 5 * i]
+                ymax = splited[4 + 5 * i]
+                c = splited[5 + 5 * i]
+                box.append([float(xmin), float(ymin),
+                            float(xmax), float(ymax)])
                 label.append(int(c))
             self.boxes.append(torch.Tensor(box))
             self.labels.append(torch.LongTensor(label))
@@ -86,10 +87,10 @@ class ListDataset(data.Dataset):
         if self.train:
             img, boxes = random_flip(img, boxes)
             img, boxes = random_crop(img, boxes)
-            img, boxes = resize(img, boxes, (size,size))
+            img, boxes = resize(img, boxes, (size, size))
         else:
             img, boxes = resize(img, boxes, size)
-            img, boxes = center_crop(img, boxes, (size,size))
+            img, boxes = center_crop(img, boxes, (size, size))
 
         img = self.transform(img)
         return img, boxes, labels
@@ -117,7 +118,8 @@ class ListDataset(data.Dataset):
         cls_targets = []
         for i in range(num_imgs):
             inputs[i] = imgs[i]
-            loc_target, cls_target = self.encoder.encode(boxes[i], labels[i], input_size=(w,h))
+            loc_target, cls_target = self.encoder.encode(
+                boxes[i], labels[i], input_size=(w, h))
             loc_targets.append(loc_target)
             cls_targets.append(cls_target)
         return inputs, torch.stack(loc_targets), torch.stack(cls_targets)
@@ -131,11 +133,12 @@ def test():
 
     transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize((0.485,0.456,0.406), (0.229,0.224,0.225))
+        transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
     ])
     dataset = ListDataset(root='/mnt/hgfs/D/download/PASCAL_VOC/voc_all_images',
                           list_file='./data/voc12_train.txt', train=True, transform=transform, input_size=600)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=8, shuffle=False, num_workers=1, collate_fn=dataset.collate_fn)
+    dataloader = torch.utils.data.DataLoader(
+        dataset, batch_size=8, shuffle=False, num_workers=1, collate_fn=dataset.collate_fn)
 
     for images, loc_targets, cls_targets in dataloader:
         print(images.size())
@@ -145,4 +148,6 @@ def test():
         torchvision.utils.save_image(grid, 'a.jpg')
         break
 
-# test()
+
+if __name__ == '__main__':
+    test()
