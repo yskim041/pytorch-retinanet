@@ -8,12 +8,15 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 
+import sys
+
+sys.path.append('../')
 from fpn import FPN50
 from retinanet import RetinaNet
 
 
 print('Loading pretrained ResNet50 model..')
-d = torch.load('./model/resnet50.pth')
+d = torch.load('../model/resnet50.pth')
 
 print('Loading into FPN50..')
 fpn = FPN50()
@@ -37,5 +40,5 @@ pi = 0.01
 init.constant(net.cls_head[-1].bias, -math.log((1-pi)/pi))
 
 net.fpn.load_state_dict(dd)
-torch.save(net.state_dict(), 'net.pth')
+torch.save(net.state_dict(), '../model/net.pth')
 print('Done!')
