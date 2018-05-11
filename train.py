@@ -38,7 +38,7 @@ def run_train():
     ])
 
     trainset = ListDataset(
-        root='./data/VOC2012/JPEGImages',
+        root='./data/voc_all_images',
         list_file='./data/voc12_train.txt',
         train=True, transform=transform, input_size=600)
     trainloader = torch.utils.data.DataLoader(
@@ -46,7 +46,7 @@ def run_train():
         collate_fn=trainset.collate_fn)
 
     testset = ListDataset(
-        root='./data/VOC2012/JPEGImages',
+        root='./data/voc_all_images',
         list_file='./data/voc12_val.txt',
         train=False, transform=transform, input_size=600)
     testloader = torch.utils.data.DataLoader(
