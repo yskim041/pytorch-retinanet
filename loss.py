@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import division
 
 import torch
 import torch.nn as nn
@@ -28,7 +29,7 @@ class FocalLoss(nn.Module):
 
         t = one_hot_embedding(y.data.cpu(), 1 + self.num_classes)  # [N,21]
         t = t[:, 1:]  # exclude background
-        t = Variable(t).cuda()  # [N,20]
+        t = t.cuda()  # [N,20]
 
         p = x.sigmoid()
         pt = p * t + (1 - p) * (1 - t)         # pt = p if t > 0 else 1-p
@@ -51,7 +52,7 @@ class FocalLoss(nn.Module):
 
         t = one_hot_embedding(y.data.cpu(), 1 + self.num_classes)
         t = t[:, 1:]
-        t = Variable(t).cuda()
+        t = t.cuda()
 
         xt = x * (2 * t - 1)  # xt = x if t > 0 else -x
         pt = (2 * xt + 1).sigmoid()
@@ -74,7 +75,7 @@ class FocalLoss(nn.Module):
         '''
         batch_size, num_boxes = cls_targets.size()
         pos = cls_targets > 0  # [N,#anchors]
-        num_pos = pos.data.long().sum()
+        num_pos = pos.data.sum().type(torch.cuda.FloatTensor)
 
         ################################################################
         # loc_loss = SmoothL1Loss(pos_loc_preds, pos_loc_targets)
@@ -94,6 +95,7 @@ class FocalLoss(nn.Module):
         cls_loss = self.focal_loss_alt(masked_cls_preds, cls_targets[pos_neg])
 
         print('loc_loss: %.3f | cls_loss: %.3f' %
-              (loc_loss.data[0] / num_pos, cls_loss.data[0] / num_pos), end=' | ')
+              (loc_loss.data / num_pos, cls_loss.data / num_pos), end=' | ')
         loss = (loc_loss + cls_loss) / num_pos
+
         return loss

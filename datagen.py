@@ -7,8 +7,6 @@ The list file is like:
 from __future__ import print_function
 
 import os
-import sys
-import random
 
 import torch
 import torch.utils.data as data

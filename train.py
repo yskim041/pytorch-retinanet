@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import division
 
 import os
 import argparse
@@ -16,7 +17,10 @@ from loss import FocalLoss
 from retinanet import RetinaNet
 from datagen import ListDataset
 
-from torch.autograd import Variable
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1"
+
+best_loss = float('inf')  # best test loss
 
 
 def run_train():
@@ -27,7 +31,6 @@ def run_train():
     args = parser.parse_args()
 
     assert torch.cuda.is_available(), 'Error: CUDA not found!'
-    best_loss = float('inf')  # best test loss
     start_epoch = 0  # start from epoch 0 or last epoch
 
     # Data
@@ -78,9 +81,9 @@ def run_train():
         net.module.freeze_bn()
         train_loss = 0
         for batch_idx, (inputs, loc_targets, cls_targets) in enumerate(trainloader):
-            inputs = Variable(inputs.cuda())
-            loc_targets = Variable(loc_targets.cuda())
-            cls_targets = Variable(cls_targets.cuda())
+            inputs = inputs.cuda()
+            loc_targets = loc_targets.cuda()
+            cls_targets = cls_targets.cuda()
 
             optimizer.zero_grad()
             loc_preds, cls_preds = net(inputs)
@@ -88,9 +91,9 @@ def run_train():
             loss.backward()
             optimizer.step()
 
-            train_loss += loss.data[0]
+            train_loss += loss.data
             print('train_loss: %.3f | avg_loss: %.3f' %
-                  (loss.data[0], train_loss / (batch_idx + 1)))
+                  (loss.data, train_loss / (batch_idx + 1)))
 
     # Test
     def test(epoch):
@@ -98,9 +101,9 @@ def run_train():
         net.eval()
         test_loss = 0
         for batch_idx, (inputs, loc_targets, cls_targets) in enumerate(testloader):
-            inputs = Variable(inputs.cuda(), volatile=True)
-            loc_targets = Variable(loc_targets.cuda())
-            cls_targets = Variable(cls_targets.cuda())
+            inputs = inputs.cuda()
+            loc_targets = loc_targets.cuda()
+            cls_targets = cls_targets.cuda()
 
             loc_preds, cls_preds = net(inputs)
             loss = criterion(loc_preds, loc_targets, cls_preds, cls_targets)

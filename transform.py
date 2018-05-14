@@ -3,7 +3,6 @@ import math
 import random
 
 import torch
-import torchvision.transforms as transforms
 
 from PIL import Image, ImageDraw
 
