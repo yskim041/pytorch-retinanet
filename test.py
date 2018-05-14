@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+
+import sys
+
 import torch
 import torchvision.transforms as transforms
 
@@ -11,8 +15,11 @@ from PIL import Image, ImageDraw
 def run_test():
     print('Loading model..')
     net = RetinaNet()
-    net.load_state_dict(torch.load('./checkpoint/params.pth'))
+
+    ckpt = torch.load('./checkpoint/ckpt.pth')
+    net.load_state_dict(ckpt['net'])
     net.eval()
+    net.cuda()
 
     transform = transforms.Compose([
         transforms.ToTensor(),
@@ -20,24 +27,27 @@ def run_test():
     ])
 
     print('Loading image..')
-    img = Image.open('./image/000001.jpg')
-    w = h = 600
+    img = Image.open('./image/000050.jpg')
+    w = h = 500
     img = img.resize((w,h))
 
     print('Predicting..')
     x = transform(img)
     x = x.unsqueeze(0)
-    x = Variable(x, volatile=True)
-    loc_preds, cls_preds = net(x)
+    with torch.no_grad():
+        loc_preds, cls_preds = net(x.cuda())
 
-    print('Decoding..')
-    encoder = DataEncoder()
-    boxes, labels = encoder.decode(loc_preds.data.squeeze(), cls_preds.data.squeeze(), (w,h))
+        print('Decoding..')
+        encoder = DataEncoder()
+        boxes, labels = encoder.decode(
+            loc_preds.cpu().data.squeeze(),
+            cls_preds.cpu().data.squeeze(),
+            (w,h))
 
-    draw = ImageDraw.Draw(img)
-    for box in boxes:
-        draw.rectangle(list(box), outline='red')
-    img.show()
+        draw = ImageDraw.Draw(img)
+        for box in boxes:
+           draw.rectangle(list(box), outline='red')
+        img.show()
 
 
 if __name__ == '__main__':

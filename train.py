@@ -1,7 +1,10 @@
+#!/usr/bin/env python
+
 from __future__ import print_function
 from __future__ import division
 
 import os
+import math
 import argparse
 
 import torch
@@ -45,7 +48,7 @@ def run_train():
         list_file='./data/voc12_train.txt',
         train=True, transform=transform, input_size=600)
     trainloader = torch.utils.data.DataLoader(
-        trainset, batch_size=4, shuffle=True, num_workers=8,
+        trainset, batch_size=16, shuffle=True, num_workers=8,
         collate_fn=trainset.collate_fn)
 
     testset = ListDataset(
@@ -53,11 +56,11 @@ def run_train():
         list_file='./data/voc12_val.txt',
         train=False, transform=transform, input_size=600)
     testloader = torch.utils.data.DataLoader(
-        testset, batch_size=4, shuffle=False, num_workers=8,
+        testset, batch_size=8, shuffle=False, num_workers=8,
         collate_fn=testset.collate_fn)
 
     # Model
-    net = RetinaNet()
+    net = RetinaNet(num_classes=20)
     net.load_state_dict(torch.load('./model/net.pth'))
     if args.resume:
         print('==> Resuming from checkpoint..')
@@ -80,6 +83,10 @@ def run_train():
         net.train()
         net.module.freeze_bn()
         train_loss = 0
+
+        total_batches = int(math.ceil(
+            trainloader.dataset.num_samples / trainloader.batch_size))
+
         for batch_idx, (inputs, loc_targets, cls_targets) in enumerate(trainloader):
             inputs = inputs.cuda()
             loc_targets = loc_targets.cuda()
@@ -92,14 +99,19 @@ def run_train():
             optimizer.step()
 
             train_loss += loss.data
-            print('train_loss: %.3f | avg_loss: %.3f' %
-                  (loss.data, train_loss / (batch_idx + 1)))
+            print('[%d/%d] train_loss: %.3f | avg_loss: %.3f' %
+                  (batch_idx, total_batches,
+                   loss.data, train_loss / (batch_idx + 1)))
 
     # Test
     def test(epoch):
         print('\nTest')
         net.eval()
         test_loss = 0
+
+        total_batches = int(math.ceil(
+            testloader.dataset.num_samples / testloader.batch_size))
+
         for batch_idx, (inputs, loc_targets, cls_targets) in enumerate(testloader):
             inputs = inputs.cuda()
             loc_targets = loc_targets.cuda()
@@ -107,9 +119,10 @@ def run_train():
 
             loc_preds, cls_preds = net(inputs)
             loss = criterion(loc_preds, loc_targets, cls_preds, cls_targets)
-            test_loss += loss.data[0]
-            print('test_loss: %.3f | avg_loss: %.3f' %
-                  (loss.data[0], test_loss / (batch_idx + 1)))
+            test_loss += loss.data
+            print('[%d/%d] test_loss: %.3f | avg_loss: %.3f' %
+                  (batch_idx, total_batches,
+                   loss.data, test_loss / (batch_idx + 1)))
 
         # Save checkpoint
         global best_loss
