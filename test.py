@@ -28,8 +28,7 @@ def run_test():
 
     print('Loading image..')
     img = Image.open('./image/000050.jpg')
-    w = h = 500
-    img = img.resize((w,h))
+    w, h = img.size
 
     print('Predicting..')
     x = transform(img)

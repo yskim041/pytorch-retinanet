@@ -21,7 +21,7 @@ from retinanet import RetinaNet
 from datagen import ListDataset
 
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
 best_loss = float('inf')  # best test loss
 
@@ -48,7 +48,7 @@ def run_train():
         list_file='./data/voc12_train.txt',
         train=True, transform=transform, input_size=600)
     trainloader = torch.utils.data.DataLoader(
-        trainset, batch_size=16, shuffle=True, num_workers=8,
+        trainset, batch_size=8, shuffle=True, num_workers=8,
         collate_fn=trainset.collate_fn)
 
     testset = ListDataset(
@@ -56,7 +56,7 @@ def run_train():
         list_file='./data/voc12_val.txt',
         train=False, transform=transform, input_size=600)
     testloader = torch.utils.data.DataLoader(
-        testset, batch_size=8, shuffle=False, num_workers=8,
+        testset, batch_size=4, shuffle=False, num_workers=8,
         collate_fn=testset.collate_fn)
 
     # Model
@@ -99,8 +99,8 @@ def run_train():
             optimizer.step()
 
             train_loss += loss.data
-            print('[%d/%d] train_loss: %.3f | avg_loss: %.3f' %
-                  (batch_idx, total_batches,
+            print('[%d| %d/%d] train_loss: %.3f | avg_loss: %.3f' %
+                  (epoch, batch_idx, total_batches,
                    loss.data, train_loss / (batch_idx + 1)))
 
     # Test
@@ -120,8 +120,8 @@ def run_train():
             loc_preds, cls_preds = net(inputs)
             loss = criterion(loc_preds, loc_targets, cls_preds, cls_targets)
             test_loss += loss.data
-            print('[%d/%d] test_loss: %.3f | avg_loss: %.3f' %
-                  (batch_idx, total_batches,
+            print('[%d| %d/%d] test_loss: %.3f | avg_loss: %.3f' %
+                  (epoch, batch_idx, total_batches,
                    loss.data, test_loss / (batch_idx + 1)))
 
         # Save checkpoint
