@@ -4,6 +4,8 @@ import xml.etree.ElementTree as ET
 import numpy as np
 import cv2
 import os
+import random
+
 try:
     import cPickle as pickle
 except ImportError:
@@ -84,7 +86,7 @@ def load_tf_label_map():
 
 def load_pickled_label_map():
     print('\n--- test saved label map ---')
-    with open('./label_map.pkl', 'rb') as f:
+    with open('./label_map.pkl', 'r') as f:
         label_map = pickle.load(f)
 
     assert label_map is not None, 'cannot load label map'
@@ -96,30 +98,47 @@ def convert_tf_dataset():
 
     print('\n--- convert label map ---')
     label_map = load_tf_label_map()
-    with open('label_map.pkl', 'wb') as f:
+    with open('label_map.pkl', 'w') as f:
         pickle.dump(label_map, f, pickle.HIGHEST_PROTOCOL)
     print('label_map is saved in data/label_map.pkl')
     # load_pickled_label_map()
 
-    simplified_ann_filename = 'ann.txt'
+    ann_filename = 'ann'
     import sys
     if len(sys.argv) == 2:
-        simplified_ann_filename = sys.argv[1]
+        ann_filename = sys.argv[1]
 
     print('\n--- convert annotations ---')
     simplified_lines = list()
     anns = os.listdir(ann_base_dir)
-    for ann_filename in anns:
-        simplified_lines.append(xml_to_line(ann_filename))
+    for this_ann in anns:
+        simplified_lines.append(xml_to_line(this_ann))
     # print(simplified_lines)
-    print('annotation is saved in data/{}'.format(simplified_ann_filename))
+    random.shuffle(simplified_lines)
 
-    f_ann = open(simplified_ann_filename, 'wb')
+    f_ann = open(ann_filename + '.txt', 'w')
+    f_ann_train = open(ann_filename + '_train.txt', 'w')
+    f_ann_test = open(ann_filename + '_test.txt', 'w')
+
+    line_count = 0
+    train_num = int(len(simplified_lines) * 0.9)
     for line in simplified_lines:
-        f_ann.write('{}\n'.format(line))
+        this_line = '{}\n'.format(line)
+        f_ann.write(this_line)
+        if line_count < train_num:
+            f_ann_train.write(this_line)
+        else:
+            f_ann_test.write(this_line)
+        line_count += 1
     f_ann.close()
+    f_ann_train.close()
+    f_ann_test.close()
+    print('annotation is saved in data/{}'.format(ann_filename))
 
-    os.symlink(img_base_dir, 'all_images')
+    img_link_name = 'all_images'
+    if os.path.exists(img_link_name):
+        os.remove(img_link_name)
+    os.symlink(img_base_dir, img_link_name)
     print('made symlink to {}'.format(img_base_dir))
 
     print('\n--- finished ---\n')
