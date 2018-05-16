@@ -93,22 +93,32 @@ def load_pickled_label_map():
     print(label_map)
 
 
+def add_prefix(name, prefix):
+    if prefix is not None:
+        name = '{}_{}'.format(prefix, name)
+    return name
+
+
 def convert_tf_dataset():
     print('convert tf_dataset for pytorch-retinanet')
 
-    print('\n--- convert label map ---')
-    label_map = load_tf_label_map()
-    with open('label_map.pkl', 'w') as f:
-        pickle.dump(label_map, f, pickle.HIGHEST_PROTOCOL)
-    print('label_map is saved in data/label_map.pkl')
-    # load_pickled_label_map()
-
-    ann_filename = 'ann'
+    prefix = 'tf'
     import sys
     if len(sys.argv) == 2:
-        ann_filename = sys.argv[1]
+        prefix = sys.argv[1]
+
+    print('\n--- convert label map ---')
+    pkl_filename = add_prefix('label_map.pkl', prefix)
+
+    label_map = load_tf_label_map()
+    with open(pkl_filename, 'w') as f:
+        pickle.dump(label_map, f, pickle.HIGHEST_PROTOCOL)
+    print('label_map is saved in data/{}'.format(pkl_filename))
+    # load_pickled_label_map()
 
     print('\n--- convert annotations ---')
+    ann_filename = add_prefix('ann', prefix)
+
     simplified_lines = list()
     anns = os.listdir(ann_base_dir)
     for this_ann in anns:
@@ -130,12 +140,13 @@ def convert_tf_dataset():
         else:
             f_ann_test.write(this_line)
         line_count += 1
+
     f_ann.close()
     f_ann_train.close()
     f_ann_test.close()
     print('annotation is saved in data/{}'.format(ann_filename))
 
-    img_link_name = 'all_images'
+    img_link_name = add_prefix('all_images', prefix)
     if os.path.exists(img_link_name):
         os.remove(img_link_name)
     os.symlink(img_base_dir, img_link_name)

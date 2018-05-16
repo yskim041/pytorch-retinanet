@@ -29,8 +29,24 @@ best_loss = float('inf')  # best test loss
 def run_train():
     parser = argparse.ArgumentParser(description='PyTorch RetinaNet Training')
     parser.add_argument('--lr', default=1e-3, type=float, help='learning rate')
-    parser.add_argument('--resume', '-r', action='store_true',
-                        help='resume from checkpoint')
+    parser.add_argument('--skip_checkpoint', '-s', action='store_true',
+                        help='skip checkpoint and retrain')
+    parser.add_argument('--img_dir',  default='./data/voc_all_images',
+                        help='image directory path')
+    parser.add_argument('--train_list',  default='./data/voc12_train.txt',
+                        help='annotations for training dataset')
+    parser.add_argument('--test_list',  default='./data/voc12_val.txt',
+                        help='annotations for test dataset')
+    parser.add_argument('--train_batch_size', default=8, type=int,
+                        help='batch size of training')
+    parser.add_argument('--test_batch_size', default=4, type=int,
+                        help='batch size of testing')
+    parser.add_argument('--num_classes', default=20, type=int,
+                        help='number of classes')
+    parser.add_argument('--net',  default='./model/net.pth',
+                        help='saved state dict of the model')
+    parser.add_argument('--checkpoint',  default='./checkpoint/ckpt.pth',
+                        help='saved checkpoint path')
     args = parser.parse_args()
 
     assert torch.cuda.is_available(), 'Error: CUDA not found!'
@@ -44,27 +60,32 @@ def run_train():
     ])
 
     trainset = ListDataset(
-        root='./data/voc_all_images',
-        list_file='./data/voc12_train.txt',
+        root=args.img_dir,
+        list_file=args.train_list,
         train=True, transform=transform, input_size=600)
     trainloader = torch.utils.data.DataLoader(
-        trainset, batch_size=8, shuffle=True, num_workers=8,
+        trainset, batch_size=args.train_batch_size,
+        shuffle=True, num_workers=8,
         collate_fn=trainset.collate_fn)
 
     testset = ListDataset(
-        root='./data/voc_all_images',
-        list_file='./data/voc12_val.txt',
+        root=args.img_dir,
+        list_file=args.test_list,
         train=False, transform=transform, input_size=600)
     testloader = torch.utils.data.DataLoader(
-        testset, batch_size=4, shuffle=False, num_workers=8,
+        testset, batch_size=args.test_batch_size,
+        shuffle=False, num_workers=8,
         collate_fn=testset.collate_fn)
 
     # Model
-    net = RetinaNet(num_classes=20)
-    net.load_state_dict(torch.load('./model/net.pth'))
-    if args.resume:
-        print('==> Resuming from checkpoint..')
-        checkpoint = torch.load('./checkpoint/ckpt.pth')
+    net = RetinaNet(num_classes=args.num_classes)
+    net.load_state_dict(torch.load(args.net))
+
+    if args.skip_checkpoint:
+        print('==> Skipping checkpoint and retraining..')
+    elif os.path.exists(args.checkpoint):
+        print('==> Resuming from checkpoint \"{}\"..'.format(args.checkpoint))
+        checkpoint = torch.load(args.checkpoint)
         net.load_state_dict(checkpoint['net'])
         best_loss = checkpoint['loss']
         start_epoch = checkpoint['epoch']
