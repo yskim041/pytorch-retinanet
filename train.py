@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from __future__ import print_function
 from __future__ import division
@@ -20,8 +20,6 @@ from loss import FocalLoss
 from retinanet import RetinaNet
 from datagen import ListDataset
 
-
-best_loss = float('inf')  # best test loss
 
 parser = argparse.ArgumentParser(description='PyTorch RetinaNet Training')
 parser.add_argument('--gpus', '-g', default='0',
@@ -48,6 +46,8 @@ parser.add_argument('--checkpoint', default='./checkpoint/ckpt.pth',
 args = parser.parse_args()
 
 os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
+
+best_loss = float('inf')  # best test loss
 
 
 def run_train():
@@ -96,7 +96,7 @@ def run_train():
         net, device_ids=range(torch.cuda.device_count()))
     net.cuda()
 
-    criterion = FocalLoss()
+    criterion = FocalLoss(num_classes=args.num_classes)
     optimizer = optim.SGD(net.parameters(), lr=args.lr,
                           momentum=0.9, weight_decay=1e-4)
 

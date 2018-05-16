@@ -55,7 +55,7 @@ def get_state_dict():
             dd[k] = d[k]
 
     print('Saving RetinaNet..')
-    net = RetinaNet()
+    net = RetinaNet(num_classes=48)
     for m in net.modules():
         if isinstance(m, nn.Conv2d):
             nn.init.normal_(m.weight, mean=0, std=0.01)
