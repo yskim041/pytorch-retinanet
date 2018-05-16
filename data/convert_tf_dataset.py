@@ -4,7 +4,9 @@ import xml.etree.ElementTree as ET
 import numpy as np
 import cv2
 import os
+import shutil
 import random
+import argparse
 
 try:
     import cPickle as pickle
@@ -12,38 +14,18 @@ except ImportError:
     import pickle
 
 
-img_base_dir = '/mnt/hard_data/Data/foods/data/images'
-ann_base_dir = '/mnt/hard_data/Data/foods/data/annotations/xmls'
-label_map_filename = '/mnt/hard_data/Data/foods/data/food_label_map.pbtxt'
+parser = argparse.ArgumentParser(description='Converting TF dataset for this model')
+parser.add_argument('--prefix', help='prefix string for new files')
+parser.add_argument('--img_base_dir', help='image directory path')
+parser.add_argument('--ann_base_dir', help='annotation directory path')
+parser.add_argument('--label_map_filename', help='protobuf label map file path')
+args = parser.parse_args()
 
 label_map_inv = None
 
 
-def update_xml(filepath, filename, is_edit=False):
-    print('>>> {}'.format(filename))
-    tree = ET.parse(filepath)
-    root = tree.getroot()
-
-    for node in root:
-        if node.tag == 'folder':
-            print(node.tag, node.text)
-            node.text = '.'
-            print('-->   ', node.text)
-        elif node.tag == 'filename':
-            print(node.tag, node.text)
-            node.text = '%s.jpg' % filename[:-4]
-            print('--> ', node.text)
-        elif node.tag == 'path':
-            print(node.tag, node.text)
-            node.text = os.path.join(img_base_dir, '%s.jpg' % filename[:-4])
-            print('--> ', node.text)
-
-    if is_edit:
-        tree.write(filepath)
-
-
 def xml_to_line(filename):
-    tree = ET.parse(os.path.join(ann_base_dir, filename))
+    tree = ET.parse(os.path.join(args.ann_base_dir, filename))
     root = tree.getroot()
 
     line = root.find('filename').text
@@ -58,8 +40,12 @@ def xml_to_line(filename):
 
 
 def load_tf_label_map():
-    with open(label_map_filename, 'r') as f:
+    with open(args.label_map_filename, 'r') as f:
         content = f.read().splitlines()
+        f.close()
+    shutil.copyfile(
+        args.label_map_filename,
+        os.path.basename(args.label_map_filename))
 
     assert content is not None, 'cannot find label map'
 
@@ -93,22 +79,17 @@ def load_pickled_label_map():
     print(label_map)
 
 
-def add_prefix(name, prefix):
-    if prefix is not None:
-        name = '{}_{}'.format(prefix, name)
+def add_prefix(name):
+    if args.prefix is not None:
+        name = '{}_{}'.format(args.prefix, name)
     return name
 
 
 def convert_tf_dataset():
     print('convert tf_dataset for pytorch-retinanet')
 
-    prefix = 'tf'
-    import sys
-    if len(sys.argv) == 2:
-        prefix = sys.argv[1]
-
     print('\n--- convert label map ---')
-    pkl_filename = add_prefix('label_map.pkl', prefix)
+    pkl_filename = add_prefix('label_map.pkl')
 
     label_map = load_tf_label_map()
     with open(pkl_filename, 'w') as f:
@@ -117,10 +98,10 @@ def convert_tf_dataset():
     # load_pickled_label_map()
 
     print('\n--- convert annotations ---')
-    ann_filename = add_prefix('ann', prefix)
+    ann_filename = add_prefix('ann')
 
     simplified_lines = list()
-    anns = os.listdir(ann_base_dir)
+    anns = os.listdir(args.ann_base_dir)
     for this_ann in anns:
         simplified_lines.append(xml_to_line(this_ann))
     # print(simplified_lines)
@@ -146,11 +127,11 @@ def convert_tf_dataset():
     f_ann_test.close()
     print('annotation is saved in data/{}'.format(ann_filename))
 
-    img_link_name = add_prefix('all_images', prefix)
+    img_link_name = add_prefix('all_images')
     if os.path.exists(img_link_name):
         os.remove(img_link_name)
-    os.symlink(img_base_dir, img_link_name)
-    print('made symlink to {}'.format(img_base_dir))
+    os.symlink(args.img_base_dir, img_link_name)
+    print('made symlink to {}'.format(args.img_base_dir))
 
     print('\n--- finished ---\n')
 

@@ -155,9 +155,9 @@ def run_train():
                 'loss': test_loss,
                 'epoch': epoch,
             }
-            if not os.path.isdir('checkpoint'):
-                os.mkdir('checkpoint')
-            torch.save(state, './checkpoint/ckpt.pth')
+            if not os.path.exists(os.path.dirname(args.checkpoint)):
+                os.makedirs(os.path.dirname(args.checkpoint))
+            torch.save(state, args.checkpoint)
             best_loss = test_loss
 
     for epoch in range(start_epoch, start_epoch + 200):
