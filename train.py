@@ -21,34 +21,36 @@ from retinanet import RetinaNet
 from datagen import ListDataset
 
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
-
 best_loss = float('inf')  # best test loss
+
+parser = argparse.ArgumentParser(description='PyTorch RetinaNet Training')
+parser.add_argument('--gpus', '-g', default='0',
+                    help='cuda visible devices')
+parser.add_argument('--lr', default=1e-3, type=float, help='learning rate')
+parser.add_argument('--skip_checkpoint', '-s', action='store_true',
+                    help='skip checkpoint and retrain')
+parser.add_argument('--img_dir', default='./data/voc_all_images',
+                    help='image directory path')
+parser.add_argument('--train_list', default='./data/voc12_train.txt',
+                    help='annotations for training dataset')
+parser.add_argument('--test_list', default='./data/voc12_val.txt',
+                    help='annotations for test dataset')
+parser.add_argument('--train_batch_size', default=8, type=int,
+                    help='batch size of training')
+parser.add_argument('--test_batch_size', default=4, type=int,
+                    help='batch size of testing')
+parser.add_argument('--num_classes', default=20, type=int,
+                    help='number of classes')
+parser.add_argument('--net', default='./model/net.pth',
+                    help='saved state dict of the model')
+parser.add_argument('--checkpoint', default='./checkpoint/ckpt.pth',
+                    help='saved checkpoint path')
+args = parser.parse_args()
+
+os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
 
 
 def run_train():
-    parser = argparse.ArgumentParser(description='PyTorch RetinaNet Training')
-    parser.add_argument('--lr', default=1e-3, type=float, help='learning rate')
-    parser.add_argument('--skip_checkpoint', '-s', action='store_true',
-                        help='skip checkpoint and retrain')
-    parser.add_argument('--img_dir',  default='./data/voc_all_images',
-                        help='image directory path')
-    parser.add_argument('--train_list',  default='./data/voc12_train.txt',
-                        help='annotations for training dataset')
-    parser.add_argument('--test_list',  default='./data/voc12_val.txt',
-                        help='annotations for test dataset')
-    parser.add_argument('--train_batch_size', default=8, type=int,
-                        help='batch size of training')
-    parser.add_argument('--test_batch_size', default=4, type=int,
-                        help='batch size of testing')
-    parser.add_argument('--num_classes', default=20, type=int,
-                        help='number of classes')
-    parser.add_argument('--net',  default='./model/net.pth',
-                        help='saved state dict of the model')
-    parser.add_argument('--checkpoint',  default='./checkpoint/ckpt.pth',
-                        help='saved checkpoint path')
-    args = parser.parse_args()
-
     assert torch.cuda.is_available(), 'Error: CUDA not found!'
     start_epoch = 0  # start from epoch 0 or last epoch
 
