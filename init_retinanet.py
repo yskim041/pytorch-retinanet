@@ -21,7 +21,7 @@ model_base_dir = './pretrained'
 model_filename = os.path.join(model_base_dir, 'resnet50.pth')
 model_url = 'https://download.pytorch.org/models/resnet50-19c8e357.pth'
 
-net_filename = os.path.join(model_base_dir, 'net.pth')
+net_filename = os.path.join(model_base_dir, 'net_new.pth')
 
 
 def load_pretrained_model():
