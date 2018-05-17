@@ -5,8 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from utils import one_hot_embedding
-from torch.autograd import Variable
+from utils.utils import one_hot_embedding
 
 
 class FocalLoss(nn.Module):

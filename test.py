@@ -7,9 +7,10 @@ import argparse
 import torch
 import torchvision.transforms as transforms
 
-from retinanet import RetinaNet
-from encoder import DataEncoder
 from PIL import Image, ImageDraw, ImageFont
+
+from model.retinanet import RetinaNet
+from utils.encoder import DataEncoder
 
 
 parser = argparse.ArgumentParser(description='PyTorch RetinaNet Testing')

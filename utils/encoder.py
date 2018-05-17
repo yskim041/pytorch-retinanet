@@ -2,7 +2,7 @@
 import math
 import torch
 
-from utils import meshgrid, box_iou, box_nms, change_box_order
+from .utils import meshgrid, box_iou, box_nms, change_box_order
 
 
 class DataEncoder:
