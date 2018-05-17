@@ -97,7 +97,8 @@ class FPN(nn.Module):
         '''
         _, _, H, W = y.size()
         # return F.upsample(x, size=(H, W), mode='bilinear') + y  # < 0.4
-        return F.upsample(x, size=(H, W), mode='bilinear', align_corners=False) + y  # >= 0.4
+        return F.upsample(
+            x, size=(H, W), mode='bilinear', align_corners=False) + y  # >= 0.4
 
     def forward(self, x):
         # Bottom-up

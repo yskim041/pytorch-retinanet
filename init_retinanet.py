@@ -11,7 +11,6 @@ import torch.nn as nn
 
 import math
 import os
-import sys
 
 from model.fpn import FPN50
 from model.retinanet import RetinaNet
