@@ -100,9 +100,3 @@ ENV/
 
 # mypy
 .mypy_cache/
-
-# saved params
-model/
-
-# dataset link
-data/voc_all_images
