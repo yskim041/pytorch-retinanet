@@ -108,8 +108,8 @@ class DataEncoder:
           boxes: (tensor) decode box locations, sized [#obj,4].
           labels: (tensor) class labels for each box, sized [#obj,].
         '''
-        CLS_THRESH = 0.5
-        NMS_THRESH = 0.5
+        CLS_THRESH = 0.3
+        NMS_THRESH = 0.3
 
         input_size = torch.Tensor([input_size, input_size]) if isinstance(input_size, int) \
             else torch.Tensor(input_size)
@@ -125,5 +125,6 @@ class DataEncoder:
         score, labels = cls_preds.sigmoid().max(1)          # [#anchors,]
         ids = score > CLS_THRESH
         ids = ids.nonzero().squeeze()             # [#obj,]
+
         keep = box_nms(boxes[ids], score[ids], threshold=NMS_THRESH)
         return boxes[ids][keep], labels[ids][keep]
