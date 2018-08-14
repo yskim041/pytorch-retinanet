@@ -29,6 +29,7 @@ class RetinaNet(nn.Module):
         for fm in fms:
             loc_pred = self.loc_head(fm)
             cls_pred = self.cls_head(fm)
+
             # [N, 9*4,H,W] -> [N,H,W, 9*4] -> [N,H*W*9, 4]
             loc_pred = loc_pred.permute(
                 0, 2, 3, 1).contiguous().view(x.size(0), -1, 4)

@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 import xml.etree.ElementTree as ET
-import numpy as np
-import cv2
 import os
 import shutil
 import random
@@ -138,4 +136,3 @@ def convert_tf_dataset():
 
 if __name__ == '__main__':
     convert_tf_dataset()
-
