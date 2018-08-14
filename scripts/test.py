@@ -13,6 +13,7 @@ import torchvision.transforms as transforms
 
 from PIL import Image, ImageDraw, ImageFont
 
+sys.path.append('../')
 from model.retinanet import RetinaNet
 from utils.encoder import DataEncoder
 

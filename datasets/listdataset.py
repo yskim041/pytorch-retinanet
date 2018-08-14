@@ -33,9 +33,9 @@ class ListDataset(data.Dataset):
         self.transform = transform
         self.input_size = input_size
 
-        self.fnames = []
-        self.boxes = []
-        self.labels = []
+        self.fnames = list()
+        self.boxes = list()
+        self.labels = list()
 
         self.encoder = DataEncoder()
 
@@ -47,8 +47,8 @@ class ListDataset(data.Dataset):
             splited = line.strip().split()
             self.fnames.append(splited[0])
             num_boxes = (len(splited) - 1) // 5
-            box = []
-            label = []
+            box = list()
+            label = list()
             for i in range(num_boxes):
                 xmin = splited[1 + 5 * i]
                 ymin = splited[2 + 5 * i]
@@ -113,8 +113,8 @@ class ListDataset(data.Dataset):
         num_imgs = len(imgs)
         inputs = torch.zeros(num_imgs, 3, h, w)
 
-        loc_targets = []
-        cls_targets = []
+        loc_targets = list()
+        cls_targets = list()
         for i in range(num_imgs):
             inputs[i] = imgs[i]
             loc_target, cls_target = self.encoder.encode(

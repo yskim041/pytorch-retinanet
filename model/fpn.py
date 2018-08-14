@@ -68,7 +68,7 @@ class FPN(nn.Module):
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)
-        layers = []
+        layers = list()
         for stride in strides:
             layers.append(block(self.in_planes, planes, stride))
             self.in_planes = planes * block.expansion
@@ -96,8 +96,8 @@ class FPN(nn.Module):
         So we choose bilinear upsample which supports arbitrary output sizes.
         '''
         _, _, H, W = y.size()
-        # return F.upsample(x, size=(H, W), mode='bilinear') + y  # < 0.4
-        return F.upsample(x, size=(H, W), mode='bilinear', align_corners=False) + y  # >= 0.4
+        return F.interpolate(
+            x, size=(H, W), mode='bilinear', align_corners=False) + y
 
     def forward(self, x):
         # Bottom-up
@@ -123,13 +123,4 @@ def FPN50():
 
 
 def FPN101():
-    return FPN(Bottleneck, [2, 4, 23, 3])
-
-
-def test():
-    net = FPN50()
-    fms = net(torch.randn(1, 3, 600, 300))
-    for fm in fms:
-        print(fm.size())
-
-# test()
+    return FPN(Bottleneck, [3, 4, 23, 3])

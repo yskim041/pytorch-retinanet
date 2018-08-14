@@ -7,8 +7,8 @@ from .utils import meshgrid, box_iou, box_nms, change_box_order
 
 class DataEncoder:
     def __init__(self):
-        self.anchor_areas = [32 * 32., 64 * 64., 128 *
-                             128., 256 * 256., 512 * 512.]  # p3 -> p7
+        self.anchor_areas = [32 * 32., 64 * 64., 128 * 128.,
+                             256 * 256., 512 * 512.]  # p3 -> p7
         self.aspect_ratios = [1 / 2., 1 / 1., 2 / 1.]
         self.scale_ratios = [1., pow(2, 1 / 3.), pow(2, 2 / 3.)]
         self.anchor_wh = self._get_anchor_wh()
@@ -122,9 +122,12 @@ class DataEncoder:
         wh = loc_wh.exp() * anchor_boxes[:, 2:]
         boxes = torch.cat([xy - wh / 2, xy + wh / 2], 1)  # [#anchors,4]
 
-        score, labels = cls_preds.sigmoid().max(1)          # [#anchors,]
+        score, labels = cls_preds.sigmoid().max(1)  # [#anchors,]
         ids = score > CLS_THRESH
-        ids = ids.nonzero().squeeze()             # [#obj,]
+        ids = ids.nonzero().squeeze().view(-1)  # [#obj,]
+
+        if len(ids) == 0:
+            return None, None, None
 
         keep = box_nms(boxes[ids], score[ids], threshold=NMS_THRESH)
         return boxes[ids][keep], labels[ids][keep], score[ids]

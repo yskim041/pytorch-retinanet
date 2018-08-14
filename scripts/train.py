@@ -3,6 +3,7 @@
 from __future__ import print_function
 from __future__ import division
 
+import sys
 import os
 import math
 import argparse
@@ -16,9 +17,11 @@ import torch.backends.cudnn as cudnn
 import torchvision
 import torchvision.transforms as transforms
 
+sys.path.append('../')
 from loss.focal_loss import FocalLoss
 from model.retinanet import RetinaNet
-from datagen import ListDataset
+from datasets.listdataset import ListDataset
+from config import config
 
 
 parser = argparse.ArgumentParser(description='PyTorch RetinaNet Training')
