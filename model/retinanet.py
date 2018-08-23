@@ -3,41 +3,43 @@ import sys
 import torch
 import torch.nn as nn
 
-from fpn import FPN50, FPN101
+from .fpn import FPN50, FPN101
 
 sys.path.append('../')
 from config import config
 
 
 class RetinaNet(nn.Module):
-    num_anchors = 9
-
-    def __init__(self, num_classes=20):
+    def __init__(self):
         super(RetinaNet, self).__init__()
+
         if config.model_name == 'fpn101':
             self.fpn = FPN101()
         else:
             self.fpn = FPN50()
-        self.num_classes = num_classes
+
+        self.num_anchors = 9
+
         self.loc_head = self._make_head(self.num_anchors * 4)
-        self.cls_head = self._make_head(self.num_anchors * self.num_classes)
+        self.cls_head = self._make_head(self.num_anchors * config.num_classes)
 
     def forward(self, x):
+        loc_preds = list()
+        cls_preds = list()
+
         fms = self.fpn(x)
-        loc_preds = []
-        cls_preds = []
         for fm in fms:
             loc_pred = self.loc_head(fm)
             cls_pred = self.cls_head(fm)
-
-            # [N, 9*4,H,W] -> [N,H,W, 9*4] -> [N,H*W*9, 4]
+            # [N, 9*4, H, W] -> [N, H, W, 9*4] -> [N, H*W*9, 4]
             loc_pred = loc_pred.permute(
                 0, 2, 3, 1).contiguous().view(x.size(0), -1, 4)
-            # [N,9*20,H,W] -> [N,H,W,9*20] -> [N,H*W*9,20]
+            # [N, 9*c, H, W] -> [N, H, W, 9*c] -> [N, H*W*9, c]
             cls_pred = cls_pred.permute(
-                0, 2, 3, 1).contiguous().view(x.size(0), -1, self.num_classes)
+                0, 2, 3, 1).contiguous().view(x.size(0), -1, config.num_classes)
             loc_preds.append(loc_pred)
             cls_preds.append(cls_pred)
+
         return torch.cat(loc_preds, 1), torch.cat(cls_preds, 1)
 
     def _make_head(self, out_planes):
@@ -56,18 +58,3 @@ class RetinaNet(nn.Module):
         for layer in self.modules():
             if isinstance(layer, nn.BatchNorm2d):
                 layer.eval()
-
-
-def test():
-    net = RetinaNet()
-    loc_preds, cls_preds = net(torch.randn(2, 3, 224, 224))
-    print(loc_preds.size())
-    print(cls_preds.size())
-    loc_grads = torch.randn(loc_preds.size())
-    cls_grads = torch.randn(cls_preds.size())
-    loc_preds.backward(loc_grads)
-    cls_preds.backward(cls_grads)
-
-
-if __name__ == '__main__':
-    test()

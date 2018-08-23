@@ -37,7 +37,7 @@ def import_pretrained_resnet():
             fpn_states[k] = conv_layer_states[k]
 
     print('Initializing RetinaNet with {}.'.format(config.model_name))
-    net = RetinaNet(num_classes=config.num_classes)
+    net = RetinaNet()
     for m in net.modules():
         if isinstance(m, nn.Conv2d):
             nn.init.normal_(m.weight, mean=0, std=0.01)
@@ -51,6 +51,9 @@ def import_pretrained_resnet():
     nn.init.constant_(net.cls_head[-1].bias, -1 * math.log((1 - pi) / pi))
 
     net.fpn.load_state_dict(fpn_states)
+
+    if not os.path.exists(os.path.dirname(config.pretrained_filename)):
+        os.makedirs(os.path.dirname(config.pretrained_filename))
     torch.save(net.state_dict(), config.pretrained_filename)
     print('Finished.\nSaved in: {}'.format(config.pretrained_filename))
 

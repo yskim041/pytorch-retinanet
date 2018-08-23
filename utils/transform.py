@@ -1,4 +1,7 @@
 '''Perform transforms on both PIL image and object boxes.'''
+
+from __future__ import division
+
 import math
 import random
 
@@ -35,8 +38,12 @@ def resize(img, boxes, size, max_size=1000):
         ow, oh = size
         sw = float(ow) / w
         sh = float(oh) / h
-    return img.resize((ow, oh), Image.BILINEAR), \
-        boxes * torch.Tensor([sw, sh, sw, sh])
+
+    resized_img = img.resize((ow, oh), Image.BILINEAR)
+
+    ratio = torch.Tensor([sw, sh, sw, sh])
+    resized_boxes = boxes * ratio
+    return resized_img, resized_boxes
 
 
 def random_crop(img, boxes):

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import os
 import argparse
 try:
@@ -17,20 +18,12 @@ from model.retinanet import RetinaNet
 from utils.encoder import DataEncoder
 
 
-parser = argparse.ArgumentParser(description='PyTorch RetinaNet Testing')
-parser.add_argument('--gpus', '-g', default='0',
-                    help='cuda visible devices')
+parser = argparse.ArgumentParser(description='Test SPNet')
 parser.add_argument('--img_path', default='./image/000050.jpg',
                     help='test image path')
-parser.add_argument('--num_classes', default=20, type=int,
-                    help='number of classes')
-parser.add_argument('--checkpoint', default='./checkpoint/ckpt.pth',
-                    help='saved checkpoint path')
-parser.add_argument('--label_map', default='./data/label_map.pkl',
-                    help='label map for the model')
 args = parser.parse_args()
 
-os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
+os.environ['CUDA_VISIBLE_DEVICES'] = config.gpu_id
 
 
 def load_pickled_label_map():
@@ -90,7 +83,11 @@ def run_test():
                 list(box[:2]),
                 item_tag,
                 font=fnt, fill=(255, 255, 255, 255))
-        img.show()
+
+        img.save(
+            os.path.join('./rst',
+                         'rst.png'),
+            'PNG')
 
 
 if __name__ == '__main__':
