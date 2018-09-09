@@ -3,10 +3,10 @@
 import os
 
 
-gpu_id = '0'
+gpu_id = '2, 3'
 
 project_dir = os.path.split(os.getcwd())[0]
-project_prefix = 'can'
+project_prefix = 'food_c8'
 
 available_models = {
     'fpn50': {'model_name': 'fpn50', 'conv_layer': 'resnet50'},
@@ -17,19 +17,22 @@ model_key = 'fpn101'
 model_name = available_models[model_key]['model_name']
 base_conv_layer = available_models[model_key]['conv_layer']
 
-img_res = 500
-num_classes = 4
+img_res = 600
+num_classes = 8
 
-train_batch_size = 2
-test_batch_size = 1
+train_batch_size = 8
+test_batch_size = 4
 
-dataset_dir = os.path.join(project_dir, 'data/can_data')
+dataset_dir = os.path.join(project_dir, 'data/food_data')
 
-label_map_filename = os.path.join(dataset_dir, 'can_label_map.pbtxt')
-img_dir = os.path.join(dataset_dir, 'images')
+label_map_filename = os.path.join(
+    dataset_dir, '{}_label_map.pbtxt'.format(project_prefix))
+img_dir = os.path.join(dataset_dir, 'bounding_boxes_c8/images')
 
-train_list_filename = os.path.join(dataset_dir, 'can_ann_train.txt')
-test_list_filename = os.path.join(dataset_dir, 'can_ann_test.txt')
+train_list_filename = os.path.join(
+    dataset_dir, '{}_ann_train.txt'.format(project_prefix))
+test_list_filename = os.path.join(
+    dataset_dir, '{}_ann_test.txt'.format(project_prefix))
 
 pretrained_dir = os.path.join(project_dir, 'pretrained')
 pretrained_filename = os.path.join(
