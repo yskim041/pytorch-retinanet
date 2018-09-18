@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 sys.path.append('../')
-from utils.pt_utils import one_hot_embedding
+from retinanet_utils.pt_utils import one_hot_embedding
 from config import config
 
 

@@ -10,10 +10,10 @@ import torch.utils.data as data
 from PIL import Image
 
 sys.path.append('../')
-from utils.encoder import DataEncoder
-from utils.transform import resize, random_flip, random_crop, center_crop
-from utils.utils import load_label_map
-from utils.pt_utils import one_hot_embedding
+from retinanet_utils.encoder import DataEncoder
+from retinanet_utils.transform import resize, random_flip, random_crop, center_crop
+from retinanet_utils.utils import load_label_map
+from retinanet_utils.pt_utils import one_hot_embedding
 from config import config
 
 
@@ -41,14 +41,17 @@ class ListDataset(data.Dataset):
 
         with open(list_filename) as f:
             lines = f.readlines()
-            self.num_samples = len(lines)
             f.close()
 
+        self.num_samples = 0
         isize = 6
         for line in lines:
             splited = line.strip().split()
 
             this_img_filename = splited[0]
+            if this_img_filename.startswith('sample'):
+                continue
+
             self.img_filenames.append(this_img_filename)
 
             num_boxes = (len(splited) - 1) // isize
@@ -65,6 +68,8 @@ class ListDataset(data.Dataset):
 
             self.boxes.append(torch.Tensor(box))
             self.labels.append(torch.LongTensor(label))
+
+            self.num_samples += 1
 
     def __getitem__(self, idx):
         img_filename = self.img_filenames[idx]

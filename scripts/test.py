@@ -15,7 +15,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 sys.path.append('../')
 from model.retinanet import RetinaNet
-from utils.encoder import DataEncoder
+from retinanet_utils.encoder import DataEncoder
 
 
 parser = argparse.ArgumentParser(description='Test SPNet')

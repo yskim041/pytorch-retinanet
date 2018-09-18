@@ -91,7 +91,7 @@ def run_train():
     def train(epoch):
         print('\nEpoch: %d' % epoch)
         net.train()
-        net.module.freeze_bn()
+        # net.module.freeze_bn()
         train_loss = 0
 
         total_batches = int(math.ceil(
