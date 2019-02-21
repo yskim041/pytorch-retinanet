@@ -57,4 +57,3 @@ checkpoint_filename = os.path.join(
         project_prefix,
         color_tag,
         '' if excluded_item is None else 'wo_' + excluded_item + '_'))
-

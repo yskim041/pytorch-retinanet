@@ -113,7 +113,6 @@ class ListDataset(data.Dataset):
                 img = ImageEnhance.Brightness(img).enhance(random.uniform(0.4, 2.5))
                 img = ImageEnhance.Contrast(img).enhance(random.uniform(0.4, 2.0))
                 img = ImageEnhance.Sharpness(img).enhance(random.uniform(0.4, 1.5))
-
         else:
             img, boxes = resize(img, boxes, (size, size))
             # img, boxes = center_crop(img, boxes, (size, size))
