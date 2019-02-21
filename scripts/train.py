@@ -4,6 +4,7 @@ from __future__ import print_function
 from __future__ import division
 
 import os
+import numpy as np
 import math
 import sys
 
@@ -67,6 +68,7 @@ def run_train():
     # Model
     net = RetinaNet()
 
+    global best_loss
     if os.path.exists(config.checkpoint_filename):
         print('Load saved checkpoint: {}'.format(config.checkpoint_filename))
         checkpoint = torch.load(config.checkpoint_filename)
@@ -74,16 +76,18 @@ def run_train():
         best_loss = checkpoint['loss']
         start_epoch = checkpoint['epoch']
     else:
-        print('Load pretrained model: {}'.format(config.pretrained_filename))
-        if not os.path.exists(config.pretrained_filename):
-            import_pretrained_resnet()
-        net.load_state_dict(torch.load(config.pretrained_filename))
+        if not config.use_depth:
+            print('Load pretrained model: {}'.format(config.pretrained_filename))
+            if not os.path.exists(config.pretrained_filename):
+                import_pretrained_resnet()
+            net.load_state_dict(torch.load(config.pretrained_filename))
 
     net = torch.nn.DataParallel(
         net, device_ids=range(torch.cuda.device_count()))
     net.cuda()
 
     criterion = FocalLoss()
+    # optimizer = optim.Adam(net.parameters(), lr=1e-3, weight_decay=1e-4)
     optimizer = optim.SGD(
         net.parameters(), lr=1e-3, momentum=0.9, weight_decay=1e-4)
 
@@ -108,14 +112,20 @@ def run_train():
 
             optimizer.zero_grad()
             loc_preds, cls_preds = net(inputs)
-            loss = criterion(loc_preds, loc_targets, cls_preds, cls_targets)
+            loss, loc_loss, cls_loss = criterion(
+                loc_preds, loc_targets, cls_preds, cls_targets)
+            if np.isnan(loss.cpu().data.numpy()):
+                print('terminate training')
+                return
+
             loss.backward()
             optimizer.step()
 
             train_loss += loss.data
-            print('[%d| %d/%d] loss: %.3f | avg: %.3f' %
+            print('[%3d|%3d/%3d] loss: %.03f | avg: %.03f | loc: %.03f | cls: %.03f' %
                   (epoch, batch_idx, total_batches,
-                   loss.data, train_loss / (batch_idx + 1)))
+                   loss.data, train_loss / (batch_idx + 1),
+                   loc_loss.data, cls_loss.data))
 
     # Test
     def test(epoch):
@@ -136,15 +146,18 @@ def run_train():
             cls_targets = cls_targets.cuda()
 
             loc_preds, cls_preds = net(inputs)
-            loss = criterion(loc_preds, loc_targets, cls_preds, cls_targets)
+            loss, loc_loss, cls_loss = criterion(
+                loc_preds, loc_targets, cls_preds, cls_targets)
             test_loss += loss.data
-            print('[%d| %d/%d] loss: %.3f | avg: %.3f' %
+            print('[%3d|%3d/%3d] loss: %.03f | avg: %.03f | loc: %.03f | cls: %.03f' %
                   (epoch, batch_idx, total_batches,
-                   loss.data, test_loss / (batch_idx + 1)))
+                   loss.data, test_loss / (batch_idx + 1),
+                   loc_loss.data, cls_loss.data))
 
         # Save checkpoint
         global best_loss
         test_loss /= len(testloader)
+        print('Avg test_loss: {0:.6f}'.format(test_loss))
         if test_loss < best_loss:
             print('Save checkpoint: {}'.format(config.checkpoint_filename))
             state = {
@@ -163,4 +176,5 @@ def run_train():
 
 
 if __name__ == '__main__':
-    run_train()
+    while True:
+        run_train()

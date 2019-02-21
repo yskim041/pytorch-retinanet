@@ -1,6 +1,11 @@
+import sys
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+sys.path.append('../')
+from config import config
 
 
 class Bottleneck(nn.Module):
@@ -39,7 +44,13 @@ class FPN(nn.Module):
         super(FPN, self).__init__()
         self.in_planes = 64
 
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=7,
+        input_channels = 0
+        if config.use_rgb:
+            input_channels += 3
+        if config.use_depth:
+            input_channels += 1
+
+        self.conv1 = nn.Conv2d(input_channels, 64, kernel_size=7,
                                stride=2, padding=3, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
 
