@@ -136,6 +136,7 @@ def run_train():
         total_batches = int(math.ceil(
             testloader.dataset.num_samples / testloader.batch_size))
 
+        test_count = 0
         for batch_idx, targets in enumerate(testloader):
             inputs = targets[0]
             loc_targets = targets[1]
@@ -148,6 +149,11 @@ def run_train():
             loc_preds, cls_preds = net(inputs)
             loss, loc_loss, cls_loss = criterion(
                 loc_preds, loc_targets, cls_preds, cls_targets)
+
+            if np.isnan(loss.cpu().data.numpy()):
+                continue
+
+            test_count += 1
             test_loss += loss.data
             print('[%3d|%3d/%3d] loss: %.03f | avg: %.03f | loc: %.03f | cls: %.03f' %
                   (epoch, batch_idx, total_batches,
@@ -156,7 +162,8 @@ def run_train():
 
         # Save checkpoint
         global best_loss
-        test_loss /= len(testloader)
+        # test_loss /= len(testloader)
+        test_loss /= test_count
         print('Avg test_loss: {0:.6f}'.format(test_loss))
         if test_loss < best_loss:
             print('Save checkpoint: {}'.format(config.checkpoint_filename))
